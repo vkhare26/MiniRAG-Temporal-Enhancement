@@ -111,8 +111,9 @@ def run_experiment(output_path):
                 minirag_answer = rag.query(QUESTION, param=QueryParam(mode="mini")).replace("\n", "").replace("\r", "")
             except Exception as e:
                 print('Error in minirag_answer', e)
-
-            writer.writerow([QUESTION, Gold_Answer,minirag_answer])
+                minirag_answer = 'Error'
+                
+            writer.writerow([QUESTION, Gold_Answer, minirag_answer])
 
     print(f'Experiment data has been recorded in the file: {output_path}')
 
