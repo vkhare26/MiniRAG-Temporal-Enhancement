@@ -124,7 +124,23 @@ All the code can be found in the `./reproduce` directory.
 
 LiHua-World is a dataset specifically designed for on-device RAG scenarios, containing one year of chat records from a virtual user named LiHua. The dataset includes three types of questions: single-hop, multi-hop, and summary, with each question paired with manually annotated answers and supporting documents. For more details, please refer to the [README of LiHua-World](./dataset/LiHua-World/README.md) dataset.
 
+## Star History
 
+<a href="https://star-history.com/#HKUDS/MiniRAG&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/MiniRAG&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/MiniRAG&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/MiniRAG&type=Date" />
+ </picture>
+</a>
+
+## Contribution
+
+Thank you to all our contributors!
+
+<a href="https://github.com/HKUDS/MiniRAG/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=HKUDS/MiniRAG" />
+</a>
 
 
 ## Acknowledgements

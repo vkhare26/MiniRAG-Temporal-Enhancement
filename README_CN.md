@@ -121,6 +121,24 @@ python ./reproduce/Step_1_QA.py
 LiHua-World 是一个专门为本地 RAG 场景设计的数据集，包含了一个名为 LiHua 的虚拟用户一年内的聊天记录。该数据集包含三种类型的问题：单跳、多跳和总结性问题，每个问题都配有人工标注的答案和支持文档。更多细节请参考 [LiHua-World 数据集的 README](./dataset/LiHua-World/README_CN.md)。
 
 
+## Star History
+
+<a href="https://star-history.com/#HKUDS/MiniRAG&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/MiniRAG&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/MiniRAG&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/MiniRAG&type=Date" />
+ </picture>
+</a>
+
+## Contribution
+
+感谢MiniRAG项目的所有贡献者！
+
+<a href="https://github.com/HKUDS/MiniRAG/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=HKUDS/MiniRAG" />
+</a>
+
 
 ## 致谢
 你可以参考以下相关工作，它们为我们的框架和代码库奠定了基础：[nano-graphrag](https://github.com/gusye1234/nano-graphrag) 和 [LightRAG](https://github.com/HKUDS/LightRAG)。感谢他们的出色工作。
