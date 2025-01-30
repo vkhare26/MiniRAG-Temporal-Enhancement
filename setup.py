@@ -1,13 +1,13 @@
 import setuptools
 from pathlib import Path
 
+
 # Reading the long description from README.md
 def read_long_description():
     try:
         return Path("README.md").read_text(encoding="utf-8")
     except FileNotFoundError:
         return "A description of MiniRAG is currently unavailable."
-
 
 
 # Reading dependencies from requirements.txt
@@ -21,6 +21,7 @@ def read_requirements():
             "Warning: 'requirements.txt' not found. No dependencies will be installed."
         )
     return deps
+
 
 def read_api_requirements():
     api_deps = []
@@ -54,7 +55,7 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires=">=3.9",#rec: 3.9.19
+    python_requires=">=3.9",  # rec: 3.9.19
     install_requires=requirements,
     include_package_data=True,  # Includes non-code files from MANIFEST.in
     extras_require={

@@ -5,13 +5,10 @@ from datetime import datetime
 from functools import partial
 from typing import Type, cast
 
-from .llm import *
 
 from .operate import (
     chunking_by_token_size,
     extract_entities,
-    local_query,
-    global_query,
     hybrid_query,
     minirag_query,
     naive_query,
@@ -65,6 +62,7 @@ STORAGES = {
 #     GraphStorage as ArangoDBStorage
 # )
 
+
 def lazy_external_import(module_name: str, class_name: str):
     """Lazily import a class from an external module based on the package of the caller."""
 
@@ -110,14 +108,12 @@ def always_get_an_event_loop() -> asyncio.AbstractEventLoop:
         return new_loop
 
 
-
 @dataclass
 class MiniRAG:
     working_dir: str = field(
         default_factory=lambda: f"./minirag_cache_{datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}"
     )
 
-    
     # RAGmode: str = 'minirag'
 
     kv_storage: str = field(default="JsonKVStorage")
@@ -265,15 +261,13 @@ class MiniRAG:
             embedding_func=self.embedding_func,
             meta_fields={"entity_name"},
         )
-        global_config=asdict(self)
+        global_config = asdict(self)
 
-        self.entity_name_vdb = (
-            self.vector_db_storage_cls(
-                namespace="entities_name",
-                global_config=asdict(self),
-                embedding_func=self.embedding_func,
-                meta_fields={"entity_name"}
-            )
+        self.entity_name_vdb = self.vector_db_storage_cls(
+            namespace="entities_name",
+            global_config=asdict(self),
+            embedding_func=self.embedding_func,
+            meta_fields={"entity_name"},
         )
 
         self.relationships_vdb = self.vector_db_storage_cls(
@@ -327,7 +321,6 @@ class MiniRAG:
         ]:
             # set client
             storage.db = db_client
-
 
     def insert(self, string_or_strings):
         loop = always_get_an_event_loop()

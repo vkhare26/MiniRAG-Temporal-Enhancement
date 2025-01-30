@@ -15,7 +15,7 @@ T = TypeVar("T")
 
 @dataclass
 class QueryParam:
-    mode: Literal["light", "naive","mini"] = "mini"
+    mode: Literal["light", "naive", "mini"] = "mini"
     only_need_context: bool = False
     only_need_prompt: bool = False
     response_type: str = "Multiple Paragraphs"
@@ -39,6 +39,7 @@ class QueryParam:
     history_turns: int = (
         3  # Number of complete conversation turns (user-assistant pairs) to consider
     )
+
 
 @dataclass
 class StorageNameSpace:

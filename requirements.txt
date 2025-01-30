@@ -3,9 +3,11 @@ aiofiles
 aiohttp
 configparser
 graspologic
+json_repair
 
 # database packages
 networkx
+nltk
 
 # Basic modules
 numpy
@@ -17,12 +19,10 @@ PyPDF2
 python-docx
 python-dotenv
 python-pptx
+rouge
 
 setuptools
 tenacity
-json_repair
-rouge
-nltk
 
 
 # LLM packages
