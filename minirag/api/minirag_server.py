@@ -558,7 +558,7 @@ class DocumentManager:
         # Create input directory if it doesn't exist
         self.input_dir.mkdir(parents=True, exist_ok=True)
 
-    def scan_directory(self) -> List[Path]:
+    def scan_directory_for_new_files(self) -> List[Path]:
         """Scan input directory for new files"""
         new_files = []
         for ext in self.supported_extensions:
@@ -566,6 +566,15 @@ class DocumentManager:
                 if file_path not in self.indexed_files:
                     new_files.append(file_path)
         return new_files
+
+    def scan_directory(self) -> List[Path]:
+        """Scan input directory for new files"""
+        new_files = []
+        for ext in self.supported_extensions:
+            for file_path in self.input_dir.rglob(f"*{ext}"):
+                new_files.append(file_path)
+        return new_files
+
 
     def mark_as_indexed(self, file_path: Path):
         """Mark a file as indexed"""
@@ -748,7 +757,7 @@ def create_app(args):
         # Startup logic
         if args.auto_scan_at_startup:
             try:
-                new_files = doc_manager.scan_directory()
+                new_files = doc_manager.scan_directory_for_new_files()
                 for file_path in new_files:
                     try:
                         await index_file(file_path)
@@ -1015,7 +1024,7 @@ def create_app(args):
                 scan_progress["indexed_count"] = 0
                 scan_progress["progress"] = 0
                 
-            new_files = doc_manager.scan_directory()
+            new_files = doc_manager.scan_directory_for_new_files()
             scan_progress["total_files"] = len(new_files)
 
             for file_path in new_files:
@@ -1878,7 +1887,7 @@ def create_app(args):
             "status": "healthy",
             "working_directory": str(args.working_dir),
             "input_directory": str(args.input_dir),
-            "indexed_files": files,
+            "indexed_files": [str(f) for f in files],
             "indexed_files_count": len(files),
             "configuration": {
                 # LLM configuration binding/host address (if applicable)/model (if applicable)
