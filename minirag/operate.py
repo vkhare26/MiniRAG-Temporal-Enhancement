@@ -1419,7 +1419,7 @@ async def minirag_query(  # MiniRAG
         type_keywords = keywords_data.get("answer_type_keywords", [])
         entities_from_query = keywords_data.get("entities_from_query", [])[:5]
 
-    except json_repair.JSONDecodeError:
+    except json.JSONDecodeError:
         try:
             result = (
                 result.replace(kw_prompt[:-1], "")
