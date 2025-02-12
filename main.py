@@ -6,7 +6,7 @@ import os
 from minirag import MiniRAG, QueryParam
 from minirag.llm import (
     hf_model_complete,
-    hf_embedding,
+    hf_embed,
 )
 from minirag.utils import EmbeddingFunc
 from transformers import AutoModel, AutoTokenizer
@@ -63,7 +63,7 @@ rag = MiniRAG(
     embedding_func=EmbeddingFunc(
         embedding_dim=384,
         max_token_size=1000,
-        func=lambda texts: hf_embedding(
+        func=lambda texts: hf_embed(
             texts,
             tokenizer=AutoTokenizer.from_pretrained(EMBEDDING_MODEL),
             embed_model=AutoModel.from_pretrained(EMBEDDING_MODEL),
