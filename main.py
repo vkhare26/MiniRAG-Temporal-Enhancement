@@ -4,7 +4,7 @@
 
 import os
 from minirag import MiniRAG, QueryParam
-from minirag.llm import (
+from minirag.llm.hf import (
     hf_model_complete,
     hf_embed,
 )
