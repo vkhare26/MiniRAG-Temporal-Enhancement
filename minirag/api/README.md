@@ -1,21 +1,22 @@
 ## Install with API Support
 
-LightRAG provides optional API support through FastAPI servers that add RAG capabilities to existing LLM services. You can install LightRAG with API support in two ways:
+MiniRAG now provides optional API support through FastAPI servers that add RAG capabilities to existing LLM services. You can install MiniRAG with API support in two ways: (using MiniRAG is the same as LightRAG)
 
 ### 1. Installation from PyPI
 
 ```bash
 pip install "lightrag-hku[api]"
 ```
+Note: we use the same package for the MiniRAG.
 
 ### 2. Installation from Source (Development)
 
 ```bash
 # Clone the repository
-git clone https://github.com/HKUDS/lightrag.git
+git clone https://github.com/HKUDS/minirag.git
 
 # Change to the repository directory
-cd lightrag
+cd minirag
 
 # create a Python virtual enviroment if neccesary
 # Install in editable mode with API support
@@ -52,9 +53,9 @@ For example, you have the possibility to use ollama for the embedding and openai
 Azure OpenAI API can be created using the following commands in Azure CLI (you need to install Azure CLI first from [https://docs.microsoft.com/en-us/cli/azure/install-azure-cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)):
 ```bash
 # Change the resource group name, location and OpenAI resource name as needed
-RESOURCE_GROUP_NAME=LightRAG
+RESOURCE_GROUP_NAME=MiniRAG
 LOCATION=swedencentral
-RESOURCE_NAME=LightRAG-OpenAI
+RESOURCE_NAME=MiniRAG-OpenAI
 
 az login
 az group create --name $RESOURCE_GROUP_NAME --location $LOCATION
@@ -76,33 +77,21 @@ LLM_BINDING_API_KEY=api_key_of_azure_ai
 
 ### About Ollama API
 
-We provide an Ollama-compatible interfaces for LightRAG, aiming to emulate LightRAG as an Ollama chat model. This allows AI chat frontends supporting Ollama, such as Open WebUI, to access LightRAG easily.
+We provide an Ollama-compatible interfaces for MiniRAG, aiming to emulate MiniRAG as an Ollama chat model. This allows AI chat frontends supporting Ollama, such as Open WebUI, to access MiniRAG easily.
 
-#### Choose Query mode in chat
+#### Connect Open WebUI to MiniRAG
 
-A query prefix in the query string can determines which LightRAG query mode is used to generate the respond for the query. The supported prefixes include:
-
-/local
-/global
-/hybrid
-/naive
-/mix
-
-For example, chat message "/mix 唐僧有几个徒弟" will trigger a mix mode query for LighRAG. A chat message without query prefix will trigger a hybrid mode query by default。
-
-#### Connect Open WebUI to LightRAG
-
-After starting the lightrag-server, you can add an Ollama-type connection in the Open WebUI admin pannel. And then a model named lightrag:latest will appear in Open WebUI's model management interface. Users can then send queries to LightRAG through the chat interface.
+After starting the minirag-server, you can add an Ollama-type connection in the Open WebUI admin pannel. And then a model named minirag:latest will appear in Open WebUI's model management interface. Users can then send queries to MiniRAG through the chat interface.
 
 ## Configuration
 
-LightRAG can be configured using either command-line arguments or environment variables. When both are provided, command-line arguments take precedence over environment variables.
+MiniRAG can be configured using either command-line arguments or environment variables. When both are provided, command-line arguments take precedence over environment variables.
 
-For better performance, the API server's default values for TOP_K and COSINE_THRESHOLD are set to 50 and 0.4 respectively. If COSINE_THRESHOLD remains at its default value of 0.2 in LightRAG, many irrelevant entities and relations would be retrieved and sent to the LLM.
+For better performance, the API server's default values for TOP_K and COSINE_THRESHOLD are set to 50 and 0.4 respectively. If COSINE_THRESHOLD remains at its default value of 0.2 in MiniRAG, many irrelevant entities and relations would be retrieved and sent to the LLM.
 
 ### Environment Variables
 
-You can configure LightRAG using environment variables by creating a `.env` file in your project root directory. Here's a complete example of available environment variables:
+You can configure MiniRAG using environment variables by creating a `.env` file in your project root directory. Here's a complete example of available environment variables:
 
 ```env
 # Server Configuration
@@ -138,7 +127,7 @@ EMBEDDING_BINDING_HOST=http://localhost:11434
 EMBEDDING_MODEL=bge-m3:latest
 
 # Security
-#LIGHTRAG_API_KEY=you-api-key-for-accessing-LightRAG
+#MINIRAG_API_KEY=you-api-key-for-accessing-MiniRAG
 
 # Logging
 LOG_LEVEL=INFO
@@ -162,13 +151,13 @@ The configuration values are loaded in the following order (highest priority fir
 For example:
 ```bash
 # This command-line argument will override both the environment variable and default value
-python lightrag.py --port 8080
+python minirag.py --port 8080
 
 # The environment variable will override the default value but not the command-line argument
-PORT=7000 python lightrag.py
+PORT=7000 python minirag.py
 ```
 
-#### LightRag Server Options
+#### MiniRag Server Options
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -189,7 +178,7 @@ PORT=7000 python lightrag.py
 | --max-embed-tokens | 8192 | Maximum embedding token size |
 | --timeout | None | Timeout in seconds (useful when using slow AI). Use None for infinite timeout |
 | --log-level | INFO | Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) |
-| --key | None | API key for authentication. Protects lightrag server against unauthorized access |
+| --key | None | API key for authentication. Protects minirag server against unauthorized access |
 | --ssl | False | Enable HTTPS |
 | --ssl-certfile | None | Path to SSL certificate file (required if --ssl is enabled) |
 | --ssl-keyfile | None | Path to SSL private key file (required if --ssl is enabled) |
@@ -198,65 +187,65 @@ PORT=7000 python lightrag.py
 
 ### Example Usage
 
-#### Running a Lightrag server with ollama default local server as llm and embedding backends
+#### Running a MiniRag server with ollama default local server as llm and embedding backends
 
-Ollama is the default backend for both llm and embedding, so by default you can run lightrag-server with no parameters and the default ones will be used. Make sure ollama is installed and is running and default models are already installed on ollama.
+Ollama is the default backend for both llm and embedding, so by default you can run minirag-server with no parameters and the default ones will be used. Make sure ollama is installed and is running and default models are already installed on ollama.
 
 ```bash
-# Run lightrag with ollama, mistral-nemo:latest for llm, and bge-m3:latest for embedding
-lightrag-server
+# Run minirag with ollama, mistral-nemo:latest for llm, and bge-m3:latest for embedding
+minirag-server
 
 # Using specific models (ensure they are installed in your ollama instance)
-lightrag-server --llm-model adrienbrault/nous-hermes2theta-llama3-8b:f16 --embedding-model nomic-embed-text --embedding-dim 1024
+minirag-server --llm-model adrienbrault/nous-hermes2theta-llama3-8b:f16 --embedding-model nomic-embed-text --embedding-dim 1024
 
 # Using an authentication key
-lightrag-server --key my-key
+minirag-server --key my-key
 
 # Using lollms for llm and ollama for embedding
-lightrag-server --llm-binding lollms
+minirag-server --llm-binding lollms
 ```
 
-#### Running a Lightrag server with lollms default local server as llm and embedding backends
+#### Running a MiniRAG server with lollms default local server as llm and embedding backends
 
 ```bash
-# Run lightrag with lollms, mistral-nemo:latest for llm, and bge-m3:latest for embedding, use lollms for both llm and embedding
-lightrag-server --llm-binding lollms --embedding-binding lollms
+# Run minirag with lollms, mistral-nemo:latest for llm, and bge-m3:latest for embedding, use lollms for both llm and embedding
+minirag-server --llm-binding lollms --embedding-binding lollms
 
 # Using specific models (ensure they are installed in your ollama instance)
-lightrag-server --llm-binding lollms --llm-model adrienbrault/nous-hermes2theta-llama3-8b:f16 --embedding-binding lollms --embedding-model nomic-embed-text --embedding-dim 1024
+minirag-server --llm-binding lollms --llm-model adrienbrault/nous-hermes2theta-llama3-8b:f16 --embedding-binding lollms --embedding-model nomic-embed-text --embedding-dim 1024
 
 # Using an authentication key
-lightrag-server --key my-key
+minirag-server --key my-key
 
 # Using lollms for llm and openai for embedding
-lightrag-server --llm-binding lollms --embedding-binding openai --embedding-model text-embedding-3-small
+minirag-server --llm-binding lollms --embedding-binding openai --embedding-model text-embedding-3-small
 ```
 
 
-#### Running a Lightrag server with openai server as llm and embedding backends
+#### Running a MiniRAG server with openai server as llm and embedding backends
 
 ```bash
-# Run lightrag with lollms, GPT-4o-mini  for llm, and text-embedding-3-small for embedding, use openai for both llm and embedding
-lightrag-server --llm-binding openai --llm-model GPT-4o-mini --embedding-binding openai --embedding-model text-embedding-3-small
+# Run minirag with lollms, GPT-4o-mini  for llm, and text-embedding-3-small for embedding, use openai for both llm and embedding
+minirag-server --llm-binding openai --llm-model GPT-4o-mini --embedding-binding openai --embedding-model text-embedding-3-small
 
 # Using an authentication key
-lightrag-server --llm-binding openai --llm-model GPT-4o-mini --embedding-binding openai --embedding-model text-embedding-3-small --key my-key
+minirag-server --llm-binding openai --llm-model GPT-4o-mini --embedding-binding openai --embedding-model text-embedding-3-small --key my-key
 
 # Using lollms for llm and openai for embedding
-lightrag-server --llm-binding lollms --embedding-binding openai --embedding-model text-embedding-3-small
+minirag-server --llm-binding lollms --embedding-binding openai --embedding-model text-embedding-3-small
 ```
 
-#### Running a Lightrag server with azure openai server as llm and embedding backends
+#### Running a MiniRAG server with azure openai server as llm and embedding backends
 
 ```bash
-# Run lightrag with lollms, GPT-4o-mini  for llm, and text-embedding-3-small for embedding, use openai for both llm and embedding
-lightrag-server --llm-binding azure_openai --llm-model GPT-4o-mini --embedding-binding openai --embedding-model text-embedding-3-small
+# Run minirag with lollms, GPT-4o-mini  for llm, and text-embedding-3-small for embedding, use openai for both llm and embedding
+minirag-server --llm-binding azure_openai --llm-model GPT-4o-mini --embedding-binding openai --embedding-model text-embedding-3-small
 
 # Using an authentication key
-lightrag-server --llm-binding azure_openai --llm-model GPT-4o-mini --embedding-binding azure_openai --embedding-model text-embedding-3-small --key my-key
+minirag-server --llm-binding azure_openai --llm-model GPT-4o-mini --embedding-binding azure_openai --embedding-model text-embedding-3-small --key my-key
 
 # Using lollms for llm and azure_openai for embedding
-lightrag-server --llm-binding lollms --embedding-binding azure_openai --embedding-model text-embedding-3-small
+minirag-server --llm-binding lollms --embedding-binding azure_openai --embedding-model text-embedding-3-small
 ```
 
 **Important Notes:**
@@ -267,7 +256,7 @@ lightrag-server --llm-binding lollms --embedding-binding azure_openai --embeddin
 
 For help on any server, use the --help flag:
 ```bash
-lightrag-server --help
+minirag-server --help
 ```
 
 Note: If you don't need the API functionality, you can install the base package without API support using:
@@ -362,7 +351,7 @@ Handle chat completion requests
 
 ```shell
 curl -N -X POST http://localhost:9721/api/chat -H "Content-Type: application/json" -d \
-  '{"model":"lightrag:latest","messages":[{"role":"user","content":"猪八戒是谁"}],"stream":true}'
+  '{"model":"minirag:latest","messages":[{"role":"user","content":"猪八戒是谁"}],"stream":true}'
 ```
 
 > For more information about Ollama API pls. visit :  [Ollama API documentation](https://github.com/ollama/ollama/blob/main/docs/api.md)
@@ -391,21 +380,21 @@ Contribute to the project: [Guide](contributor-readme.MD)
 
 For LoLLMs:
 ```bash
-uvicorn lollms_lightrag_server:app --reload --port 9721
+uvicorn lollms_minirag_server:app --reload --port 9721
 ```
 
 For Ollama:
 ```bash
-uvicorn ollama_lightrag_server:app --reload --port 9721
+uvicorn ollama_minirag_server:app --reload --port 9721
 ```
 
 For OpenAI:
 ```bash
-uvicorn openai_lightrag_server:app --reload --port 9721
+uvicorn openai_minirag_server:app --reload --port 9721
 ```
 For Azure OpenAI:
 ```bash
-uvicorn azure_openai_lightrag_server:app --reload --port 9721
+uvicorn azure_openai_minirag_server:app --reload --port 9721
 ```
 ### API Documentation
 
@@ -445,27 +434,27 @@ This intelligent caching mechanism:
 
 ## Install Lightrag as a Linux Service
 
-Create your service file: `lightrag-server.sevice`. Modified the following lines from `lightrag-server.sevice.example`
+Create your service file: `minirag-server.sevice`. Modified the following lines from `minirag-server.sevice.example`
 
 ```text
-Description=LightRAG Ollama Service
-WorkingDirectory=<lightrag installed directory>
-ExecStart=<lightrag installed directory>/lightrag/api/start_lightrag.sh
+Description=MiniRAG Ollama Service
+WorkingDirectory=<minirag installed directory>
+ExecStart=<minirag installed directory>/minirag/api/start_minirag.sh
 ```
 
-Create your service startup script: `start_lightrag.sh`. Change you python virtual environment activation method as need:
+Create your service startup script: `start_minirag.sh`. Change you python virtual environment activation method as need:
 
 ```shell
 #!/bin/bash
 
 # python virtual environment activation
-source /home/netman/lightrag-xyj/venv/bin/activate
+source /home/netman/minirag-xyj/venv/bin/activate
 # start lightrag api server
 lightrag-server
 ```
 
 Install lightrag.service in Linux.  Sample commands in Ubuntu server look like:
-
+#Note: lightrag-server.service is the service file name, you can change it to minirag-server.service as needed.
 ```shell
 sudo cp lightrag-server.service /etc/systemd/system/
 sudo systemctl daemon-reload
