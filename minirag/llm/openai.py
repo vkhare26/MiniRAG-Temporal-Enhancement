@@ -72,8 +72,8 @@ from lightrag.utils import (
     safe_unicode_decode,
     logger,
 )
-from lightrag.types import GPTKeywordExtractionFormat
-
+from pydantic import BaseModel
+from typing import List
 import numpy as np
 from typing import Union
 
@@ -85,6 +85,11 @@ from typing import Union
         (RateLimitError, APIConnectionError, APITimeoutError)
     ),
 )
+
+class GPTKeywordExtractionFormat(BaseModel):
+    high_level_keywords: List[str]
+    low_level_keywords: List[str]
+
 async def openai_complete_if_cache(
     model,
     prompt,
