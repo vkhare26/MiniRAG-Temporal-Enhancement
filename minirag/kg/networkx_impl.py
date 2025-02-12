@@ -144,6 +144,16 @@ class NetworkXStorage(BaseGraphStorage):
 
     async def index_done_callback(self):
         NetworkXStorage.write_nx_graph(self._graph, self._graphml_xml_file)
+        
+    async def get_types(self):
+        types = set()
+        types_with_case = set()
+
+        for _, data in self._graph.nodes(data=True):
+            if "type" in data:
+                types.add(data["type"].lower()) 
+                types_with_case.add(data["type"])  
+        return list(types), list(types_with_case)
 
     async def has_node(self, node_id: str) -> bool:
         return self._graph.has_node(node_id)
