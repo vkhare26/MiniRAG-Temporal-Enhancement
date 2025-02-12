@@ -52,13 +52,13 @@ import asyncio
 import os
 from dataclasses import dataclass
 
-from lightrag.utils import (
+from minirag.utils import (
     logger,
     load_json,
     write_json,
 )
 
-from lightrag.base import (
+from minirag.base import (
     BaseKVStorage,
 )
 
