@@ -100,6 +100,10 @@ class BaseKVStorage(Generic[T], StorageNameSpace):
 class BaseGraphStorage(StorageNameSpace):
     embedding_func: EmbeddingFunc = None
 
+    @abstractmethod
+    async def get_types(self) -> tuple[list[str], list[str]]:
+        raise NotImplementedError
+    
     async def has_node(self, node_id: str) -> bool:
         raise NotImplementedError
 
