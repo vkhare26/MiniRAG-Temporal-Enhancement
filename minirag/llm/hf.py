@@ -65,7 +65,7 @@ from minirag.exceptions import (
     RateLimitError,
     APITimeoutError,
 )
-from lightrag.utils import (
+from minirag.utils import (
     locate_json_string_body_from_string,
 )
 import torch
