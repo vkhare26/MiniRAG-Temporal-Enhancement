@@ -56,11 +56,11 @@ import networkx as nx
 import numpy as np
 
 
-from lightrag.utils import (
+from minirag.utils import (
     logger,
 )
 
-from lightrag.base import (
+from minirag.base import (
     BaseGraphStorage,
 )
 

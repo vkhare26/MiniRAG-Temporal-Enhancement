@@ -4,6 +4,7 @@ aiohttp
 configparser
 graspologic
 json_repair
+httpx
 
 # database packages
 networkx

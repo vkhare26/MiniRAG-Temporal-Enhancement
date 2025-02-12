@@ -60,12 +60,12 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type,
 )
-from lightrag.exceptions import (
+from minirag.exceptions import (
     APIConnectionError,
     RateLimitError,
     APITimeoutError,
 )
-from lightrag.utils import (
+from minirag.utils import (
     locate_json_string_body_from_string,
 )
 import torch
