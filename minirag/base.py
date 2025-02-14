@@ -30,6 +30,9 @@ class QueryParam:
     max_token_for_global_context: int = 4000
     # Number of tokens for the entity descriptions
     max_token_for_local_context: int = 4000
+
+    max_token_for_node_context: int = 500#For Mini, if too long, SLM may be fail to generate any response
+
     hl_keywords: list[str] = field(default_factory=list)
     ll_keywords: list[str] = field(default_factory=list)
     # Conversation history support
