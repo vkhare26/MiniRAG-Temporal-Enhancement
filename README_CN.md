@@ -14,6 +14,11 @@
 <a href='https://arxiv.org/abs/2501.06713'><img src='https://img.shields.io/badge/arXiv-2501.06713-b31b1b'>
 
 
+## 🎉 News
+- [x] [2025.02.14]🎯📢现在MiniRAG支持包括Neo4j、PostgreSQL、TiDB等在内的10多种异构图数据库。情人节快乐！🌹🌹🌹
+- [x] [2025.02.05]🎯📢我们的团队发布了[VideoRAG](https://github.com/HKUDS/VideoRAG)，能够理解极长上下文视频。
+- [x] [2025.02.01]🎯📢现在MiniRAG支持API和Docker部署。更多详情请参见[这里](./minirag/api/README.md)。
+
 ## TLDR
 MiniRAG 是一个极简的检索增强生成框架，它通过异质图索引和轻量级的拓扑增强检索，让小模型也能取得很好的RAG效果。
 
