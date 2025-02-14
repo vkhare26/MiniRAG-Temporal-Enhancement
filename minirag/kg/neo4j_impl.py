@@ -22,9 +22,10 @@ from tenacity import (
     retry_if_exception_type,
 )
 
-from lightrag.utils import logger
+from minirag.utils import logger
 from ..base import BaseGraphStorage
-
+import copy
+from minirag.utils import merge_tuples
 
 @dataclass
 class Neo4JStorage(BaseGraphStorage):
@@ -152,6 +153,42 @@ class Neo4JStorage(BaseGraphStorage):
                 return node_dict
             return None
 
+
+    async def get_node_from_types(self,type_list)  -> Union[dict, None]:
+        node_list = []
+        for name, arrt in self._graph.nodes(data = True):
+            node_type = arrt.get('entity_type').strip('\"')
+            if node_type in type_list:
+                node_list.append(name)
+        node_datas = await asyncio.gather(
+            *[self.get_node(name) for name in node_list]
+        )
+        node_datas = [
+            {**n, "entity_name": k}
+            for k, n in zip(node_list, node_datas)
+            if n is not None
+        ]
+        return node_datas#,node_dict
+    
+
+    async def get_neighbors_within_k_hops(self,source_node_id: str, k):
+        count = 0
+        if await self.has_node(source_node_id):
+            source_edge = list(self._graph.edges(source_node_id))
+        else:
+            print("NO THIS ID:",source_node_id)
+            return []
+        count = count+1
+        while count<k:
+            count = count+1
+            sc_edge = copy.deepcopy(source_edge)
+            source_edge =[]
+            for pair in sc_edge:
+                append_edge = list(self._graph.edges(pair[-1]))
+                for tuples in merge_tuples([pair],append_edge):
+                    source_edge.append(tuples)
+        return source_edge
+    
     async def node_degree(self, node_id: str) -> int:
         entity_name_label = node_id.strip('"')
 

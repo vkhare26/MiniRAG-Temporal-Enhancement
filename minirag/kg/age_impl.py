@@ -14,7 +14,7 @@ if not pm.is_installed("psycopg-pool"):
 if not pm.is_installed("asyncpg"):
     pm.install("asyncpg")
 
-
+import copy
 import psycopg
 from psycopg.rows import namedtuple_row
 from psycopg_pool import AsyncConnectionPool, PoolTimeout
@@ -25,8 +25,8 @@ from tenacity import (
     wait_exponential,
 )
 
-from lightrag.utils import logger
-
+from minirag.utils import logger
+from minirag.utils import merge_tuples
 from ..base import BaseGraphStorage
 
 if sys.platform.startswith("win"):
@@ -555,7 +555,52 @@ class AGEStorage(BaseGraphStorage):
         except Exception as e:
             logger.error("Error during upsert: {%s}", e)
             raise
+    async def get_types(self):
+        types = set()
+        types_with_case = set()
 
+        for _, data in self._graph.nodes(data=True):
+            if "type" in data:
+                types.add(data["type"].lower()) 
+                types_with_case.add(data["type"])  
+        return list(types), list(types_with_case)
+
+
+    async def get_node_from_types(self,type_list)  -> Union[dict, None]:
+        node_list = []
+        for name, arrt in self._graph.nodes(data = True):
+            node_type = arrt.get('entity_type').strip('\"')
+            if node_type in type_list:
+                node_list.append(name)
+        node_datas = await asyncio.gather(
+            *[self.get_node(name) for name in node_list]
+        )
+        node_datas = [
+            {**n, "entity_name": k}
+            for k, n in zip(node_list, node_datas)
+            if n is not None
+        ]
+        return node_datas#,node_dict
+    
+
+    async def get_neighbors_within_k_hops(self,source_node_id: str, k):
+        count = 0
+        if await self.has_node(source_node_id):
+            source_edge = list(self._graph.edges(source_node_id))
+        else:
+            print("NO THIS ID:",source_node_id)
+            return []
+        count = count+1
+        while count<k:
+            count = count+1
+            sc_edge = copy.deepcopy(source_edge)
+            source_edge =[]
+            for pair in sc_edge:
+                append_edge = list(self._graph.edges(pair[-1]))
+                for tuples in merge_tuples([pair],append_edge):
+                    source_edge.append(tuples)
+        return source_edge
+    
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),

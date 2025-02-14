@@ -8,9 +8,11 @@ if not pm.is_installed("redis"):
 
 # aioredis is a depricated library, replaced with redis
 from redis.asyncio import Redis
-from lightrag.utils import logger
-from lightrag.base import BaseKVStorage
+from minirag.utils import logger
+from minirag.base import BaseKVStorage
 import json
+import copy
+from minirag.utils import merge_tuples
 
 
 @dataclass

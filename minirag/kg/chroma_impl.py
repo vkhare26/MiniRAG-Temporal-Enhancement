@@ -5,8 +5,10 @@ from typing import Union
 import numpy as np
 from chromadb import HttpClient
 from chromadb.config import Settings
-from lightrag.base import BaseVectorStorage
-from lightrag.utils import logger
+from minirag.base import BaseVectorStorage
+from minirag.utils import logger
+from minirag.utils import merge_tuples
+import copy
 
 
 @dataclass

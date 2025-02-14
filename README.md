@@ -16,6 +16,13 @@ The Code Repository: **MiniRAG: Towards Extremely Simple Retrieval-Augmented Gen
 
 [中文说明](./README_CN.md) | [日本語](./README_JA.md)
 
+
+
+## 🎉 News
+- [x] [2025.02.14]🎯📢Now MiniRAG supports 10+ heterogeneous graph databases, including Neo4j, PostgreSQL, TiDB, etc. Happy valentine's day!🌹🌹🌹
+- [x] [2025.02.05]🎯📢Our team has released [VideoRAG](https://github.com/HKUDS/VideoRAG) understanding extremely long-context videos.
+- [x] [2025.02.01]🎯📢Now MiniRAG supports API&Docker deployment. see [This](./minirag/api/README.md) for more details.
+
 ## TLDR
 MiniRAG is an extremely simple retrieval-augmented generation framework that enables small models to achieve good RAG performance through heterogeneous graph indexing and lightweight topology-enhanced retrieval.
 

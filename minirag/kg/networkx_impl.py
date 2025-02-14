@@ -44,17 +44,17 @@ Features:
     - Remove nodes and edges from the graph
 
 Usage:
-    from lightrag.storage.networkx_storage import NetworkXStorage
+    from minirags.kg.networkx_impl import NetworkXStorage
 
 """
-
+import asyncio
 import html
 import os
 from dataclasses import dataclass
 from typing import Any, Union, cast
 import networkx as nx
 import numpy as np
-
+import copy
 
 from minirag.utils import (
     logger,
@@ -64,6 +64,7 @@ from minirag.base import (
     BaseGraphStorage,
 )
 
+from minirag.utils import merge_tuples
 
 @dataclass
 class NetworkXStorage(BaseGraphStorage):
@@ -154,6 +155,43 @@ class NetworkXStorage(BaseGraphStorage):
                 types.add(data["type"].lower()) 
                 types_with_case.add(data["type"])  
         return list(types), list(types_with_case)
+
+
+    async def get_node_from_types(self,type_list)  -> Union[dict, None]:
+        node_list = []
+        for name, arrt in self._graph.nodes(data = True):
+            node_type = arrt.get('entity_type').strip('\"')
+            if node_type in type_list:
+                node_list.append(name)
+        node_datas = await asyncio.gather(
+            *[self.get_node(name) for name in node_list]
+        )
+        node_datas = [
+            {**n, "entity_name": k}
+            for k, n in zip(node_list, node_datas)
+            if n is not None
+        ]
+        return node_datas#,node_dict
+    
+
+    async def get_neighbors_within_k_hops(self,source_node_id: str, k):
+        count = 0
+        if await self.has_node(source_node_id):
+            source_edge = list(self._graph.edges(source_node_id))
+        else:
+            print("NO THIS ID:",source_node_id)
+            return []
+        count = count+1
+        while count<k:
+            count = count+1
+            sc_edge = copy.deepcopy(source_edge)
+            source_edge =[]
+            for pair in sc_edge:
+                append_edge = list(self._graph.edges(pair[-1]))
+                for tuples in merge_tuples([pair],append_edge):
+                    source_edge.append(tuples)
+        return source_edge
+    
 
     async def has_node(self, node_id: str) -> bool:
         return self._graph.has_node(node_id)
