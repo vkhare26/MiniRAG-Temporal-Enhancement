@@ -36,17 +36,18 @@ def read_api_requirements():
 long_description = read_long_description()
 requirements = read_requirements()
 
+
 setuptools.setup(
     name="minirag-hku",
     url="https://github.com/HKUDS/MiniRAG",
     version="0.0.2",
-    author="HKUDS",
+    author="Tianyu Fan",
     description="MiniRAG: Towards Extremely Simple Retrieval-Augmented Generation",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(
         exclude=("tests*", "docs*")
-    ),  # Automatically find packages
+    ),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
@@ -55,11 +56,11 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires=">=3.9",  # rec: 3.9.19
+    python_requires=">=3.9",
     install_requires=requirements,
-    include_package_data=True,  # Includes non-code files from MANIFEST.in
+    include_package_data=True,
     extras_require={
-        "api": read_api_requirements(),  # API requirements as optional
+        "api": read_api_requirements(),
     },
     entry_points={
         "console_scripts": [

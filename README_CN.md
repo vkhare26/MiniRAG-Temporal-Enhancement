@@ -15,6 +15,7 @@
 
 
 ## 🎉 News
+- [x] [2025.02.27]🎯📢现在您可以使用 `pip install minirag-hku` 来运行我们的代码！
 - [x] [2025.02.14]🎯📢现在MiniRAG支持包括Neo4j、PostgreSQL、TiDB等在内的10多种异构图数据库。情人节快乐！🌹🌹🌹
 - [x] [2025.02.05]🎯📢我们的团队发布了[VideoRAG](https://github.com/HKUDS/VideoRAG)，能够理解极长上下文视频。
 - [x] [2025.02.01]🎯📢现在MiniRAG支持API和Docker部署。更多详情请参见[这里](./minirag/api/README.md)。
