@@ -254,6 +254,21 @@ def xml_to_json(xml_file):
         print(f"An error occurred: {e}")
         return None
 
+def safe_unicode_decode(content):
+    # Regular expression to find all Unicode escape sequences of the form \uXXXX
+    unicode_escape_pattern = re.compile(r"\\u([0-9a-fA-F]{4})")
+
+    # Function to replace the Unicode escape with the actual character
+    def replace_unicode_escape(match):
+        # Convert the matched hexadecimal value into the actual Unicode character
+        return chr(int(match.group(1), 16))
+
+    # Perform the substitution
+    decoded_content = unicode_escape_pattern.sub(
+        replace_unicode_escape, content.decode("utf-8")
+    )
+
+    return decoded_content
 
 def process_combine_contexts(hl, ll):
     header = None
@@ -359,7 +374,6 @@ def cal_path_score_list(candidate_reasoning_path, maybe_answer_list):
             scores[p] = [count_elements_in_tuple(p, maybe_answer_list)]
         scored_reasoning_path[k] = {"Score": score, "Path": scores}
     return scored_reasoning_path
-
 
 def edge_vote_path(path_dict, edge_list):
     return_dict = copy.deepcopy(path_dict)

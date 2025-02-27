@@ -66,7 +66,7 @@ from tenacity import (
     wait_exponential,
     retry_if_exception_type,
 )
-from lightrag.utils import (
+from minirag.utils import (
     wrap_embedding_func_with_attrs,
     locate_json_string_body_from_string,
     safe_unicode_decode,
@@ -140,7 +140,13 @@ async def openai_complete_if_cache(
 
         return inner()
     else:
+        if not response or not hasattr(response, "choices") or not response.choices:
+            logger.error("No valid choices returned. Full response: %s", response)
+            return ""  # or raise a more specific exception
         content = response.choices[0].message.content
+        if content is None:
+            logger.error("The message content is None. Full response: %s", response)
+            return ""
         if r"\u" in content:
             content = safe_unicode_decode(content.encode("utf-8"))
         return content
@@ -208,6 +214,30 @@ async def nvidia_openai_complete(
         return locate_json_string_body_from_string(result)
     return result
 
+async def openrouter_openai_complete(
+    prompt, 
+    system_prompt=None, 
+    history_messages=[], 
+    keyword_extraction=False, 
+    api_key: str = None, 
+    **kwargs,
+) -> str:
+    if api_key:
+        os.environ["OPENROUTER_API_KEY"] = api_key
+
+    keyword_extraction = kwargs.pop("keyword_extraction", None)
+    result = await openai_complete_if_cache(
+        "google/gemini-2.0-flash-001",  # change accordingly
+        prompt,
+        system_prompt=system_prompt,
+        history_messages=history_messages,
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+        **kwargs,
+    )
+    if keyword_extraction:  # TODO: use JSON API
+        return locate_json_string_body_from_string(result)
+    return result
 
 @wrap_embedding_func_with_attrs(embedding_dim=1536, max_token_size=8192)
 @retry(
