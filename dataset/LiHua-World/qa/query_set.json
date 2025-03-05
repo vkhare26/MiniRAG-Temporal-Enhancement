@@ -32,7 +32,7 @@
     "5": {
         "question": "Did Li Hua send a message to Jennifer asking for her opinion on protein supplements before he consulted her about his daily protein powder consumption?",
         "answer": "Yes",
-        "evidence": "20260213_16:00<and>20261120_20:00",
+        "evidence": "20260214_16:00<and>20261120_20:00",
         "type": "Multi"
     },
     "6": {
@@ -338,7 +338,7 @@
     "56": {
         "question": "Did Li Hua share a blog post about his recent fitness achievements after Jennifer sent him a motivational message?",
         "answer": "Yes",
-        "evidence": "20260129_14:00<and>20260520_18:00<and>20260606_09:00<and>20260817_12:15<and>20261022_22:00<and>20261202_14:00",
+        "evidence": "20260520_18:00<and>20260606_09:00<and>20260817_12:15<and>20261022_22:00<and>20261202_14:00",
         "type": "Multi"
     },
     "57": {
@@ -1176,14 +1176,14 @@
         "type": "Single"
     },
     "196": {
-        "question": "Why are LiHua and Adam concerned about the basement in their conversation on 20270707?",
+        "question": "Why are LiHua and Adam concerned about the basement in their conversation on 20260707?",
         "answer": "They want to check if there were any issues in the basement after those rainstorms",
         "evidence": "20260707_16:00",
         "type": "Single"
     },
     "197": {
         "question": "Why is Jennifer checking in in the gym group chat on 20260708?",
-        "answer": "She wants to hear how the members are all doing and offer some personalized advice.20270708_14:00",
+        "answer": "She wants to hear how the members are all doing and offer some personalized advice.20260708_14:00",
         "evidence": "Why",
         "type": "Single"
     },
@@ -3720,7 +3720,7 @@
         "type": "Null"
     },
     "620": {
-        "question": "What are the sales figures for the PS5 exclusive games released in 2027 that Thane discussed with group members?",
+        "question": "What are the sales figures for the PS5 exclusive games released in 2026 that Thane discussed with group members?",
         "answer": "Insufficient information",
         "evidence": "N/A",
         "type": "Null"

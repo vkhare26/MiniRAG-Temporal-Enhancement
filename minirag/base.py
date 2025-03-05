@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, TypedDict, Optional, Union, Literal, Generic, TypeVar
@@ -106,7 +107,7 @@ class BaseGraphStorage(StorageNameSpace):
     @abstractmethod
     async def get_types(self) -> tuple[list[str], list[str]]:
         raise NotImplementedError
-    
+
     async def has_node(self, node_id: str) -> bool:
         raise NotImplementedError
 
