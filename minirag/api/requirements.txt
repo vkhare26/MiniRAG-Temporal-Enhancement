@@ -10,3 +10,4 @@ tiktoken
 torch
 tqdm
 uvicorn
+json_repair
