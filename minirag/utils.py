@@ -14,6 +14,8 @@ import xml.etree.ElementTree as ET
 import copy
 import numpy as np
 import tiktoken
+from nltk.metrics import edit_distance
+from rouge import Rouge
 
 ENCODER = None
 
@@ -45,6 +47,28 @@ class EmbeddingFunc:
         return await self.func(*args, **kwargs)
 
 
+def compute_mdhash_id(content, prefix: str = ""):
+    return prefix + md5(content.encode()).hexdigest()
+
+
+def compute_args_hash(*args, cache_type: str | None = None) -> str:
+    args_str = "".join([str(arg) for arg in args])
+    if cache_type:
+        args_str = f"{cache_type}:{args_str}"
+    return md5(args_str.encode()).hexdigest()
+
+
+def clean_text(text: str) -> str:
+    """Clean text by removing null bytes (0x00) and whitespace"""
+    return text.strip().replace("\x00", "")
+
+
+def get_content_summary(content: str, max_length: int = 100) -> str:
+    """Get a summary of document content, truncating if necessary"""
+    content = content.strip()
+    return content if len(content) <= max_length else content[:max_length] + "..."
+
+
 def locate_json_string_body_from_string(content: str) -> Union[str, None]:
     """Locate the JSON string body from a string"""
     maybe_json_str = re.search(r"{.*}", content, re.DOTALL)
@@ -63,14 +87,6 @@ def convert_response_to_json(response: str) -> dict:
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse JSON: {json_str}")
         raise e from None
-
-
-def compute_args_hash(*args):
-    return md5(str(args).encode()).hexdigest()
-
-
-def compute_mdhash_id(content, prefix: str = ""):
-    return prefix + md5(content.encode()).hexdigest()
 
 
 def limit_async_func_call(max_size: int, waitting_time: float = 0.0001):
@@ -212,15 +228,21 @@ def xml_to_json(xml_file):
         for node in root.findall(".//node", namespace):
             node_data = {
                 "id": node.get("id").strip('"'),
-                "entity_type": node.find("./data[@key='d0']", namespace).text.strip('"')
-                if node.find("./data[@key='d0']", namespace) is not None
-                else "",
-                "description": node.find("./data[@key='d1']", namespace).text
-                if node.find("./data[@key='d1']", namespace) is not None
-                else "",
-                "source_id": node.find("./data[@key='d2']", namespace).text
-                if node.find("./data[@key='d2']", namespace) is not None
-                else "",
+                "entity_type": (
+                    node.find("./data[@key='d0']", namespace).text.strip('"')
+                    if node.find("./data[@key='d0']", namespace) is not None
+                    else ""
+                ),
+                "description": (
+                    node.find("./data[@key='d1']", namespace).text
+                    if node.find("./data[@key='d1']", namespace) is not None
+                    else ""
+                ),
+                "source_id": (
+                    node.find("./data[@key='d2']", namespace).text
+                    if node.find("./data[@key='d2']", namespace) is not None
+                    else ""
+                ),
             }
             data["nodes"].append(node_data)
 
@@ -228,18 +250,26 @@ def xml_to_json(xml_file):
             edge_data = {
                 "source": edge.get("source").strip('"'),
                 "target": edge.get("target").strip('"'),
-                "weight": float(edge.find("./data[@key='d3']", namespace).text)
-                if edge.find("./data[@key='d3']", namespace) is not None
-                else 0.0,
-                "description": edge.find("./data[@key='d4']", namespace).text
-                if edge.find("./data[@key='d4']", namespace) is not None
-                else "",
-                "keywords": edge.find("./data[@key='d5']", namespace).text
-                if edge.find("./data[@key='d5']", namespace) is not None
-                else "",
-                "source_id": edge.find("./data[@key='d6']", namespace).text
-                if edge.find("./data[@key='d6']", namespace) is not None
-                else "",
+                "weight": (
+                    float(edge.find("./data[@key='d3']", namespace).text)
+                    if edge.find("./data[@key='d3']", namespace) is not None
+                    else 0.0
+                ),
+                "description": (
+                    edge.find("./data[@key='d4']", namespace).text
+                    if edge.find("./data[@key='d4']", namespace) is not None
+                    else ""
+                ),
+                "keywords": (
+                    edge.find("./data[@key='d5']", namespace).text
+                    if edge.find("./data[@key='d5']", namespace) is not None
+                    else ""
+                ),
+                "source_id": (
+                    edge.find("./data[@key='d6']", namespace).text
+                    if edge.find("./data[@key='d6']", namespace) is not None
+                    else ""
+                ),
             }
             data["edges"].append(edge_data)
 
@@ -253,6 +283,7 @@ def xml_to_json(xml_file):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
 
 def safe_unicode_decode(content):
     # Regular expression to find all Unicode escape sequences of the form \uXXXX
@@ -269,6 +300,7 @@ def safe_unicode_decode(content):
     )
 
     return decoded_content
+
 
 def process_combine_contexts(hl, ll):
     header = None
@@ -375,6 +407,7 @@ def cal_path_score_list(candidate_reasoning_path, maybe_answer_list):
         scored_reasoning_path[k] = {"Score": score, "Path": scores}
     return scored_reasoning_path
 
+
 def edge_vote_path(path_dict, edge_list):
     return_dict = copy.deepcopy(path_dict)
     EDGELIST = []
@@ -399,14 +432,35 @@ def edge_vote_path(path_dict, edge_list):
     return return_dict, pairs_append
 
 
-from nltk.metrics import edit_distance
-from rouge import Rouge
+# Caching functions
+
+
+def cosine_similarity(v1, v2):
+    dot_product = np.dot(v1, v2)
+    norm1 = np.linalg.norm(v1)
+    norm2 = np.linalg.norm(v2)
+    return dot_product / (norm1 * norm2)
+
+
+def quantize_embedding(embedding: np.ndarray | list[float], bits: int = 8):
+    embedding = np.array(embedding)
+    min_val = embedding.min()
+    max_val = embedding.max()
+    scale = (2**bits - 1) / (max_val - min_val)
+    quantized = np.round((embedding - min_val) * scale).astype(np.uint8)
+    return quantized, min_val, max_val
+
+
+def dequantize_embedding(
+    quantized: np.ndarray, min_val: float, max_val: float, bits=8
+) -> np.ndarray:
+    scale = (max_val - min_val) / (2**bits - 1)
+    return (quantized * scale + min_val).astype(np.float32)
 
 
 def calculate_similarity(sentences, target, method="levenshtein", n=1, k=1):
     target_tokens = target.lower().split()
     similarities_with_index = []
-
     if method == "jaccard":
         for i, sentence in enumerate(sentences):
             sentence_tokens = sentence.lower().split()
@@ -414,25 +468,21 @@ def calculate_similarity(sentences, target, method="levenshtein", n=1, k=1):
             union = set(sentence_tokens).union(set(target_tokens))
             jaccard_score = len(intersection) / len(union) if union else 0
             similarities_with_index.append((i, jaccard_score))
-
     elif method == "levenshtein":
         for i, sentence in enumerate(sentences):
             distance = edit_distance(target_tokens, sentence.lower().split())
             similarities_with_index.append(
                 (i, 1 - (distance / max(len(target_tokens), len(sentence.split()))))
             )
-
     elif method == "rouge":
         rouge = Rouge()
         for i, sentence in enumerate(sentences):
             scores = rouge.get_scores(sentence, target)
             rouge_score = scores[0].get(f"rouge-{n}", {}).get("f", 0)
             similarities_with_index.append((i, rouge_score))
-
     else:
         raise ValueError(
             "Unsupported method. Choose 'jaccard', 'levenshtein', or 'rouge'."
         )
-
     similarities_with_index.sort(key=lambda x: x[1], reverse=True)
     return [index for index, score in similarities_with_index[:k]]
