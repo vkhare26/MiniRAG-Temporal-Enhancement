@@ -24,3 +24,5 @@ examples/output/
 .DS_Store
 #Remove config.ini from repo
 *.ini
+build/
+minirag-venv/

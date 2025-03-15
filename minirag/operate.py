@@ -370,6 +370,16 @@ async def extract_entities(
             for dp in all_entities_data
         }
         await entity_vdb.upsert(data_for_vdb)
+    if entity_vdb is not None:
+        data_for_vdb = {
+            compute_mdhash_id(dp["entity_name"], prefix="ent-"): {
+                "content": dp["entity_name"] + " " + dp["description"],
+                "entity_name": dp["entity_name"],
+            }
+            for dp in all_entities_data
+        }
+        await entity_vdb.upsert(data_for_vdb)
+
     if entity_name_vdb is not None:
         data_for_vdb = {
             compute_mdhash_id(dp["entity_name"], prefix="Ename-"): {
@@ -386,12 +396,13 @@ async def extract_entities(
                 "src_id": dp["src_id"],
                 "tgt_id": dp["tgt_id"],
                 "content": dp["keywords"]
-                + dp["src_id"]
-                + dp["tgt_id"]
-                + dp["description"],
+                + " " + dp["src_id"]
+                + " " + dp["tgt_id"]
+                + " " + dp["description"],
             }
             for dp in all_relationships_data
         }
+
         await relationships_vdb.upsert(data_for_vdb)
 
     return knowledge_graph_inst
