@@ -383,6 +383,8 @@ class MiniRAG:
                 relationships_vdb=self.relationships_vdb,
                 global_config=asdict(self),
             )
+ 
+        await self._insert_done()
 
     async def apipeline_enqueue_documents(
         self, input: str | list[str], ids: list[str] | None = None
