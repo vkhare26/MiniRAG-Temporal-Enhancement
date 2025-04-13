@@ -1,5 +1,5 @@
 import httpx
-from typing import Literal
+from typing import Literal, Union  # Add Union here
 
 
 class APIStatusError(Exception):
@@ -7,10 +7,14 @@ class APIStatusError(Exception):
 
     response: httpx.Response
     status_code: int
-    request_id: str | None
+    request_id: Union[str, None]  # Changed from str | None
 
     def __init__(
-        self, message: str, *, response: httpx.Response, body: object | None
+        self,
+        message: str,
+        *,
+        response: httpx.Response,
+        body: Union[object, None],  # Changed from object | None
     ) -> None:
         super().__init__(message, response.request, body=body)
         self.response = response

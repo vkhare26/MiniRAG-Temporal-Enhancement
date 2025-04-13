@@ -16,6 +16,7 @@ import numpy as np
 import tiktoken
 from nltk.metrics import edit_distance
 from rouge import Rouge
+from typing import Union, List  # Ensure these are imported
 
 ENCODER = None
 
@@ -51,7 +52,7 @@ def compute_mdhash_id(content, prefix: str = ""):
     return prefix + md5(content.encode()).hexdigest()
 
 
-def compute_args_hash(*args, cache_type: str | None = None) -> str:
+def compute_args_hash(*args, cache_type: Union[str, None] = None) -> str:
     args_str = "".join([str(arg) for arg in args])
     if cache_type:
         args_str = f"{cache_type}:{args_str}"
@@ -93,7 +94,7 @@ def limit_async_func_call(max_size: int, waitting_time: float = 0.0001):
     """Add restriction of maximum async calling times for a async func"""
 
     def final_decro(func):
-        """Not using async.Semaphore to aovid use nest-asyncio"""
+        """Not using async.Semaphore to avoid use nest-asyncio"""
         __current_size = 0
 
         @wraps(func)
@@ -164,16 +165,12 @@ def split_string_by_multi_markers(content: str, markers: list[str]) -> list[str]
     return [r.strip() for r in results if r.strip()]
 
 
-# Refer the utils functions of the official GraphRAG implementation:
-# https://github.com/microsoft/graphrag
 def clean_str(input: Any) -> str:
     """Clean an input string by removing HTML escapes, control characters, and other unwanted characters."""
-    # If we get non-string input, just give it back
     if not isinstance(input, str):
         return input
 
     result = html.unescape(input.strip())
-    # https://stackoverflow.com/questions/4324790/removing-control-characters-from-a-string-in-python
     return re.sub(r"[\x00-\x1f\x7f-\x9f]", "", result)
 
 
@@ -216,13 +213,11 @@ def xml_to_json(xml_file):
         tree = ET.parse(xml_file)
         root = tree.getroot()
 
-        # Print the root element's tag and attributes to confirm the file has been correctly loaded
         print(f"Root element: {root.tag}")
         print(f"Root attributes: {root.attrib}")
 
         data = {"nodes": [], "edges": []}
 
-        # Use namespace
         namespace = {"": "http://graphml.graphdrawing.org/xmlns"}
 
         for node in root.findall(".//node", namespace):
@@ -273,7 +268,6 @@ def xml_to_json(xml_file):
             }
             data["edges"].append(edge_data)
 
-        # Print the number of nodes and edges found
         print(f"Found {len(data['nodes'])} nodes and {len(data['edges'])} edges")
 
         return data
@@ -286,15 +280,11 @@ def xml_to_json(xml_file):
 
 
 def safe_unicode_decode(content):
-    # Regular expression to find all Unicode escape sequences of the form \uXXXX
     unicode_escape_pattern = re.compile(r"\\u([0-9a-fA-F]{4})")
 
-    # Function to replace the Unicode escape with the actual character
     def replace_unicode_escape(match):
-        # Convert the matched hexadecimal value into the actual Unicode character
         return chr(int(match.group(1), 16))
 
-    # Perform the substitution
     decoded_content = unicode_escape_pattern.sub(
         replace_unicode_escape, content.decode("utf-8")
     )
@@ -427,12 +417,8 @@ def edge_vote_path(path_dict, edge_list):
                         else:
                             pairs_append[j[0]].append(pairs)
 
-                # score
                 j[1].append(count)
     return return_dict, pairs_append
-
-
-# Caching functions
 
 
 def cosine_similarity(v1, v2):
@@ -442,7 +428,7 @@ def cosine_similarity(v1, v2):
     return dot_product / (norm1 * norm2)
 
 
-def quantize_embedding(embedding: np.ndarray | list[float], bits: int = 8):
+def quantize_embedding(embedding: Union[np.ndarray, List[float]], bits: int = 8):
     embedding = np.array(embedding)
     min_val = embedding.min()
     max_val = embedding.max()
@@ -452,7 +438,7 @@ def quantize_embedding(embedding: np.ndarray | list[float], bits: int = 8):
 
 
 def dequantize_embedding(
-    quantized: np.ndarray, min_val: float, max_val: float, bits=8
+    quantized: np.ndarray, min_val: float, max_val: float, bits: int = 8
 ) -> np.ndarray:
     scale = (max_val - min_val) / (2**bits - 1)
     return (quantized * scale + min_val).astype(np.float32)

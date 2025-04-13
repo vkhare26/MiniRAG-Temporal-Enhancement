@@ -3,7 +3,7 @@ import os
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from functools import partial
-from typing import Type, cast, Any
+from typing import Type, cast, Any, Union, List  # Add List here
 from dotenv import load_dotenv
 
 
@@ -24,8 +24,8 @@ from .utils import (
     clean_text,
     get_content_summary,
     set_logger,
-    logger,
 )
+
 from .base import (
     BaseGraphStorage,
     BaseKVStorage,
@@ -61,19 +61,11 @@ STORAGES = {
     "PGDocStatusStorage": ".kg.postgres_impl",
 }
 
-# future KG integrations
-
-# from .kg.ArangoDB_impl import (
-#     GraphStorage as ArangoDBStorage
-# )
-
 load_dotenv(dotenv_path=".env", override=False)
 
 
 def lazy_external_import(module_name: str, class_name: str):
     """Lazily import a class from an external module based on the package of the caller."""
-
-    # Get the caller's module and package
     import inspect
 
     caller_frame = inspect.currentframe().f_back
@@ -93,22 +85,13 @@ def lazy_external_import(module_name: str, class_name: str):
 def always_get_an_event_loop() -> asyncio.AbstractEventLoop:
     """
     Ensure that there is always an event loop available.
-
-    This function tries to get the current event loop. If the current event loop is closed or does not exist,
-    it creates a new event loop and sets it as the current event loop.
-
-    Returns:
-        asyncio.AbstractEventLoop: The current or newly created event loop.
     """
     try:
-        # Try to get the current event loop
         current_loop = asyncio.get_event_loop()
         if current_loop.is_closed():
             raise RuntimeError("Event loop is closed.")
         return current_loop
-
     except RuntimeError:
-        # If no event loop exists or it is closed, create a new one
         logger.info("Creating a new event loop in main thread.")
         new_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(new_loop)
@@ -120,8 +103,6 @@ class MiniRAG:
     working_dir: str = field(
         default_factory=lambda: f"./minirag_cache_{datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}"
     )
-
-    # RAGmode: str = 'minirag'
 
     kv_storage: str = field(default="JsonKVStorage")
     vector_storage: str = field(default="NanoVectorDBStorage")
@@ -158,9 +139,7 @@ class MiniRAG:
 
     # LLM
     llm_model_func: callable = None
-    llm_model_name: str = (
-        "meta-llama/Llama-3.2-1B-Instruct"  #'meta-llama/Llama-3.2-1B'#'google/gemma-2-2b-it'
-    )
+    llm_model_name: str = "meta-llama/Llama-3.2-1B-Instruct"
     llm_model_max_token_size: int = 32768
     llm_model_max_async: int = 16
     llm_model_kwargs: dict = field(default_factory=dict)
@@ -193,12 +172,9 @@ class MiniRAG:
             logger.info(f"Creating working directory {self.working_dir}")
             os.makedirs(self.working_dir)
 
-        # show config
         global_config = asdict(self)
         _print_config = ",\n  ".join([f"{k} = {v}" for k, v in global_config.items()])
         logger.debug(f"MiniRAG init with param:\n  {_print_config}\n")
-
-        # @TODO: should move all storage setup here to leverage initial start params attached to self.
 
         self.key_string_value_json_storage_cls: Type[BaseKVStorage] = (
             self._get_storage_class(self.kv_storage)
@@ -244,9 +220,6 @@ class MiniRAG:
             self.embedding_func
         )
 
-        ####
-        # add embedding func by walter
-        ####
         self.full_docs = self.key_string_value_json_storage_cls(
             namespace="full_docs",
             global_config=asdict(self),
@@ -262,9 +235,6 @@ class MiniRAG:
             global_config=asdict(self),
             embedding_func=self.embedding_func,
         )
-        ####
-        # add embedding func by walter over
-        ####
 
         self.entities_vdb = self.vector_db_storage_cls(
             namespace="entities",
@@ -339,10 +309,10 @@ class MiniRAG:
 
     async def ainsert(
         self,
-        input: str | list[str],
-        split_by_character: str | None = None,
+        input: Union[str, List[str]],  # Changed from str | list[str]
+        split_by_character: Union[str, None] = None,  # Changed from str | None
         split_by_character_only: bool = False,
-        ids: str | list[str] | None = None,
+        ids: Union[str, List[str], None] = None,  # Changed from str | list[str] | None
     ) -> None:
         if isinstance(input, str):
             input = [input]
@@ -383,20 +353,14 @@ class MiniRAG:
                 relationships_vdb=self.relationships_vdb,
                 global_config=asdict(self),
             )
- 
+
         await self._insert_done()
 
     async def apipeline_enqueue_documents(
-        self, input: str | list[str], ids: list[str] | None = None
+        self, input: Union[str, List[str]], ids: Union[List[str], None] = None  # Adjusted types
     ) -> None:
         """
         Pipeline for Processing Documents
-
-        1. Validate ids if provided or generate MD5 hash IDs
-        2. Remove duplicate contents
-        3. Generate document initial status
-        4. Filter out already processed documents
-        5. Enqueue document in status
         """
         if isinstance(input, str):
             input = [input]
@@ -448,13 +412,11 @@ class MiniRAG:
 
     async def apipeline_process_enqueue_documents(
         self,
-        split_by_character: str | None = None,
+        split_by_character: Union[str, None] = None,  # Adjusted type
         split_by_character_only: bool = False,
     ) -> None:
         """
-        Process pending documents by splitting them into chunks, processing
-        each chunk for entity and relation extraction, and updating the
-        document status.
+        Process pending documents by splitting them into chunks
         """
         processing_docs, failed_docs, pending_docs = await asyncio.gather(
             self.doc_status.get_docs_by_status(DocStatus.PROCESSING),
