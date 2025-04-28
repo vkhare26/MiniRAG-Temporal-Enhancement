@@ -1379,19 +1379,21 @@ async def _build_mini_query_context(
     )
 
     if not len(results_node):
-        return None
+        return None, []
 
     if not len(results_edge):
-        return None
+        return None, []
 
     use_text_units = await asyncio.gather(
         *[text_chunks_db.get_by_id(id) for id in final_chunk_id]
     )
     text_units_section_list = [["id", "content"]]
 
+    retrieved_docs = []
     for i, t in enumerate(use_text_units):
         if t is not None:
             text_units_section_list.append([i, t["content"]])
+            retrieved_docs.append({"id": i, "content": t["content"]})
     text_units_context = list_of_list_to_csv(text_units_section_list)
 
     return f"""
@@ -1403,7 +1405,7 @@ async def _build_mini_query_context(
 ```csv
 {text_units_context}
 ```
-"""
+""", retrieved_docs
 
 
 async def minirag_query(  # MiniRAG
@@ -1417,7 +1419,8 @@ async def minirag_query(  # MiniRAG
     embedder,
     query_param: QueryParam,
     global_config: dict,
-) -> str:
+    return_docs: bool = False  # Add parameter to control document return
+) -> dict:
     use_model_func = global_config["llm_model_func"]
     kw_prompt_temp = PROMPTS["minirag_query2kwd"]
     TYPE_POOL, TYPE_POOL_w_CASE = await knowledge_graph_inst.get_types()
@@ -1446,9 +1449,9 @@ async def minirag_query(  # MiniRAG
         # Handle parsing error
         except Exception as e:
             print(f"JSON parsing error: {e}")
-            return PROMPTS["fail_response"]
+            return {"answer": PROMPTS["fail_response"], "docs": []}
 
-    context = await _build_mini_query_context(
+    context, retrieved_docs = await _build_mini_query_context(
         entities_from_query,
         type_keywords,
         query,
@@ -1463,9 +1466,9 @@ async def minirag_query(  # MiniRAG
     )
 
     if query_param.only_need_context:
-        return context
+        return {"answer": context, "docs": retrieved_docs}
     if context is None:
-        return PROMPTS["fail_response"]
+        return {"answer": PROMPTS["fail_response"], "docs": []}
 
     sys_prompt_temp = PROMPTS["rag_response"]
     sys_prompt = sys_prompt_temp.format(
@@ -1476,4 +1479,4 @@ async def minirag_query(  # MiniRAG
         system_prompt=sys_prompt,
     )
 
-    return response
+    return {"answer": response, "docs": retrieved_docs if return_docs else []}

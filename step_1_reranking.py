@@ -72,7 +72,7 @@ def get_args():
     parser.add_argument("--model", type=str, default="gpt-4o-mini")
     parser.add_argument("--workingdir", type=str, default="./LiHua-World")
     parser.add_argument("--querypath", type=str, default="/Users/vkhare26/Documents/anlp/Minirag_repo/MiniRAG/dataset/LiHua-World/qa/query_set.csv")
-    parser.add_argument("--outputpath", type=str, default="/Users/vkhare26/Documents/anlp/Minirag_repo/MiniRAG/dataset/LiHua-World/qa/results.csv")
+    parser.add_argument("--outputpath", type=str, default="/Users/vkhare26/Documents/anlp/Minirag_repo/MiniRAG/dataset/LiHua-World/qa/result.csv")
     args = parser.parse_args()
     return args
 
@@ -126,18 +126,29 @@ queries = query_df["Question"].tolist()
 gold_answers = query_df["Gold Answer"].tolist()
 evidence_list = query_df["Evidence"].tolist()
 
+# Slice the lists to include only queries 83-113 (indices 82-112 in zero-based indexing)
+START_QUERY = 157  # Query 83 (1-based) is index 82 (0-based)
+END_QUERY = 200  # Query 113 (1-based) is index 112 (0-based), slice up to 113 to include it
+queries = queries[START_QUERY:END_QUERY]
+gold_answers = gold_answers[START_QUERY:END_QUERY]
+evidence_list = evidence_list[START_QUERY:END_QUERY]
+
 queries_with_context = []
-for idx, row in query_df.iterrows():
+for idx, row in query_df.iloc[START_QUERY:END_QUERY].iterrows():
     question = row["Question"]
     evidence = row["Evidence"]
     query_with_context = f"{question} (Context: Events occurred at {evidence})"
     queries_with_context.append(query_with_context)
 
+logger.info(f"Processing queries 83 to 113 (indices 82 to 112), total: {len(queries_with_context)} queries")
+
 async def run_queries():
     generated_answers = []
     query_param = QueryParam(mode=MODE, top_k=10)
     for i, query in enumerate(queries_with_context):
-        logger.info(f"[MiniRAG] Processing query {i+1}/{len(queries_with_context)}: {query}")
+        # Adjust the query number display to reflect the original query numbers (83-113)
+        query_num = START_QUERY + i + 1  # Convert back to 1-based numbering for display
+        logger.info(f"[MiniRAG] Processing query {query_num}/{END_QUERY}: {query}")
         try:
             # Retrieve top-K candidates with documents
             result = await rag.aquery(query, param=query_param, return_docs=True)
@@ -150,14 +161,39 @@ async def run_queries():
                 query_doc_pairs = [[query, doc["content"]] for doc in docs]
                 scores = cross_encoder.predict(query_doc_pairs)
                 
-                # Sort documents by score and select the top one
+                # Sort documents by score
                 ranked_docs = sorted(zip(scores, docs), key=lambda x: x[0], reverse=True)
-                top_doc = ranked_docs[0][1]["content"] if ranked_docs else "No relevant documents found."
                 top_score = ranked_docs[0][0] if ranked_docs else 0
                 logger.info(f"[Re-Ranking] Top document score: {top_score:.4f}")
                 
-                # Generate the final answer using the top re-ranked document
-                prompt = f"Based on the following context, answer the question in detail:\nContext: {top_doc}\nQuestion: {query}"
+                # Enhanced Context Fusion: Combine top 3 documents
+                top_n = min(3, len(ranked_docs))  # Use top 3 or fewer if less available
+                if top_n == 0:
+                    fused_context = "No relevant documents found."
+                else:
+                    # Normalize scores for weighting
+                    total_score = sum(score for score, _ in ranked_docs[:top_n])
+                    if total_score == 0:
+                        total_score = 1  # Avoid division by zero
+                    weighted_contexts = []
+                    for score, doc in ranked_docs[:top_n]:
+                        weight = score / total_score
+                        content = doc["content"]
+                        # Truncate content to ensure total length is manageable
+                        max_content_length = 500  # Adjust based on token limit
+                        if len(content) > max_content_length:
+                            content = content[:max_content_length] + "..."
+                        # Add weighted context with separator
+                        weighted_contexts.append(f"[Weight: {weight:.2f}] {content}")
+                    # Combine contexts with separator
+                    fused_context = "\n---\n".join(weighted_contexts)
+                
+                # Generate the final answer using the fused context
+                prompt = f"Based on the following context, answer the question in detail:\nContext:\n{fused_context}\nQuestion: {query}"
+                # Ensure prompt fits within token limit (approx. 200 tokens)
+                max_prompt_length = 1000  # Approx. 200 tokens (4 chars/token)
+                if len(prompt) > max_prompt_length:
+                    prompt = prompt[:max_prompt_length] + "..."
                 answer = await gpt_4o_mini_complete(prompt)
             
             logger.info(f"[MiniRAG] Generated answer: {answer}")
@@ -166,11 +202,11 @@ async def run_queries():
             logger.error(f"[MiniRAG] Error processing query '{query}': {str(e)}")
             generated_answers.append("Error: " + str(e))
         
-        if (i + 1) % 50 == 0 or (i + 1) == len(queries_with_context):
+        if (query_num) % 50 == 0 or query_num == END_QUERY:
             exact_matches, accuracy, error_rate = evaluate_answers(
                 generated_answers[:i+1], gold_answers[:i+1]
             )
-            print(f"\nIntermediate Evaluation after {i+1} queries:")
+            print(f"\nIntermediate Evaluation after {query_num} queries:")
             print(f"{'Method':<15} {'acc↑':<10} {'err↓':<10}")
             print("-" * 35)
             print(f"{'MiniRAG':<15} {accuracy:.2%}    {error_rate:.2%}")
@@ -189,7 +225,6 @@ def evaluate_answers(generated_answers, gold_answers):
 
     exact_matches = []
     for gen, gold in zip(generated_answers, gold_answers):
-        # Since gold answers are "Yes"/"No", check if the generated answer contains the same sentiment
         match = contains_yes_no(gen, gold)
         exact_matches.append(1 if match else 0)
 
@@ -201,16 +236,18 @@ loop = asyncio.get_event_loop()
 generated_answers = loop.run_until_complete(run_queries())
 exact_matches, accuracy, error_rate = evaluate_answers(generated_answers, gold_answers)
 
-print("\nPer-Query Results for LiHuaWorld (MiniRAG with gpt-4o-mini):")
+print("\nPer-Query Results for LiHuaWorld Queries 83-113 (MiniRAG with gpt-4o-mini):")
 print(f"{'Query':<80} {'Evidence':<40} {'Gold Answer':<20} {'Generated Answer':<50} {'Exact Match':<10}")
 print("-" * 200)
 for i, (query, evidence, gold, gen, match) in enumerate(zip(queries, evidence_list, gold_answers, generated_answers, exact_matches)):
     display_query = (query[:77] + "...") if len(query) > 77 else query
     display_evidence = (evidence[:37] + "...") if len(evidence) > 37 else evidence
     display_gen = (gen[:47] + "...") if len(gen) > 47 else gen
-    print(f"{display_query:<80} {display_evidence:<40} {gold:<20} {display_gen:<50} {match:<10}")
+    # Adjust the displayed query number to start from 83
+    query_num = START_QUERY + i + 1
+    print(f"{display_query:<80} {display_evidence:<40} {gold:<20} {display_gen:<50} {match:<10} (Query {query_num})")
 
-print("\nSummary Metrics for LiHuaWorld (MiniRAG with gpt-4o-mini):")
+print("\nSummary Metrics for LiHuaWorld Queries 83-113 (MiniRAG with gpt-4o-mini):")
 print(f"{'Method':<15} {'acc↑':<10} {'err↓':<10}")
 print("-" * 35)
 print(f"{'MiniRAG':<15} {accuracy:.2%}    {error_rate:.2%}")
@@ -221,7 +258,8 @@ results_df = pd.DataFrame({
     "Gold Answer": gold_answers,
     "Generated Answer": generated_answers,
     "Exact Match": exact_matches,
-    "Method": "MiniRAG"
+    "Method": "MiniRAG",
+    "Query Number": [START_QUERY + i + 1 for i in range(len(queries))]  # Add query numbers for reference
 })
 results_df.to_csv(OUTPUT_PATH, index=False)
 logger.info(f"Results saved to {OUTPUT_PATH}")
